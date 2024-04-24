@@ -165,11 +165,11 @@ void Keyer::toggleOutput(bool state)
 // these are approximate values for testing, a more robust "fist" can be achieved with some more work.
 void Keyer::updateTiming()
 {
-    ditDuration = 1200000 / wpm;               // Duration of a dit
+    ditDuration = WPM_RESOLUTION / wpm;               // Duration of a dit
     dahDuration = 3 * ditDuration;          // Dah is three times the duration of dit
     elementSpace = ditDuration;             // Space between elements
     characterSpace = 3 * ditDuration;       // Space between characters
-    wordSpace = (1200000 / farnsworthWPM) * 7; // Space between words
+    wordSpace = (WPM_RESOLUTION / farnsworthWPM) * 7; // Space between words
 }
 
 void Keyer::sendCharacterSpace()
