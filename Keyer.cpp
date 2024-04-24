@@ -7,9 +7,9 @@
 #define USE_HIGHRES_TIMER 1
 
 #ifdef USE_HIGHRES_TIMER
-    #define WPM_RESOLUTION 1200000
+#define WPM_RESOLUTION 1200000
 #else
-    #define WPM_RESOLUTION 1200
+#define WPM_RESOLUTION 1200
 #endif
 
 Keyer::Keyer(int ditPin, int dahPin, int outputPin) : ditPin(ditPin), dahPin(dahPin), outputPin(outputPin), wpm(20), farnsworthWPM(15), currentState(IDLE)
@@ -19,10 +19,9 @@ Keyer::Keyer(int ditPin, int dahPin, int outputPin) : ditPin(ditPin), dahPin(dah
 
 #ifdef USE_HIGHRES_TIMER
     microTimer = Timer(MICROS); // micro-second timer resolution
-#else    
-    microTimer = Timer();       // milli-second timer resolution
+#else
+    microTimer = Timer(); // milli-second timer resolution
 #endif
-
 }
 
 void Keyer::setup()
@@ -48,7 +47,7 @@ void Keyer::setup()
 void Keyer::update()
 {
     unsigned long currentTime = (microTimer.state() != PAUSED) ? microTimer.read() : 0;
-    
+
     debouncerDit.update();
     debouncerDah.update();
 
@@ -166,9 +165,9 @@ void Keyer::toggleOutput(bool state)
 void Keyer::updateTiming()
 {
     ditDuration = WPM_RESOLUTION / wpm;               // Duration of a dit
-    dahDuration = 3 * ditDuration;          // Dah is three times the duration of dit
-    elementSpace = ditDuration;             // Space between elements
-    characterSpace = 3 * ditDuration;       // Space between characters
+    dahDuration = 3 * ditDuration;                    // Dah is three times the duration of dit
+    elementSpace = ditDuration;                       // Space between elements
+    characterSpace = 3 * ditDuration;                 // Space between characters
     wordSpace = (WPM_RESOLUTION / farnsworthWPM) * 7; // Space between words
 }
 
