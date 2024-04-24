@@ -1,0 +1,31 @@
+# Add this content to your .gitignore file for an Arduino project
+
+# Ignore compiled binary and hex files
+*.elf
+*.hex
+*.bin
+
+# Ignore temporary files created by the Arduino IDE
+*.tmp
+*.log
+
+# Ignore backup files
+*.bak
+*.old
+*.save
+
+# Ignore all files that might appear in the build directory
+build/
+
+# Ignore Arduino IDE project settings
+*.ino.*  # Arduino sketch file backups and autosave files
+
+# Ignore system-specific files and sensitive files
+*.DS_Store  # MacOS file system file
+Thumbs.db  # Windows file system file
+*.sublime-*  # Sublime Text files
+.vscode/  # Visual Studio Code folder
+.secret  # Optional: any sensitive or secret file you might have
+
+# Optionally ignore any libraries and dependencies if they are installed from a package manager
+# /libraries/
