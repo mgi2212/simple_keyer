@@ -25,11 +25,11 @@
    "-IC:\\Users\\danq\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\variants\\standard",
    "-IC:\\Users\\danq\\OneDrive\\Documents\\Arduino\\libraries\\Bounce2\\src",
    "-IC:\\Users\\danq\\OneDrive\\Documents\\Arduino\\libraries\\Timer",
-   "C:\\Users\\danq\\OneDrive\\Documents\\Arduino\\simple_keyer\\build\\sketch\\Keyer.cpp",
+   "C:\\Users\\danq\\OneDrive\\Documents\\Arduino\\simple_keyer\\build\\sketch\\simple_keyer.ino.cpp",
    "-o",
-   "C:\\Users\\danq\\OneDrive\\Documents\\Arduino\\simple_keyer\\build\\sketch\\Keyer.cpp.o"
+   "C:\\Users\\danq\\OneDrive\\Documents\\Arduino\\simple_keyer\\build\\sketch\\simple_keyer.ino.cpp.o"
   ],
-  "file": "C:\\Users\\danq\\OneDrive\\Documents\\Arduino\\simple_keyer\\build\\sketch\\Keyer.cpp"
+  "file": "C:\\Users\\danq\\OneDrive\\Documents\\Arduino\\simple_keyer\\build\\sketch\\simple_keyer.ino.cpp"
  },
  {
   "directory": "c:\\Users\\danq\\OneDrive\\Documents\\Arduino\\simple_keyer",
@@ -57,11 +57,11 @@
    "-IC:\\Users\\danq\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.8.6\\variants\\standard",
    "-IC:\\Users\\danq\\OneDrive\\Documents\\Arduino\\libraries\\Bounce2\\src",
    "-IC:\\Users\\danq\\OneDrive\\Documents\\Arduino\\libraries\\Timer",
-   "C:\\Users\\danq\\OneDrive\\Documents\\Arduino\\simple_keyer\\build\\sketch\\simple_keyer.ino.cpp",
+   "C:\\Users\\danq\\OneDrive\\Documents\\Arduino\\simple_keyer\\build\\sketch\\Keyer.cpp",
    "-o",
-   "C:\\Users\\danq\\OneDrive\\Documents\\Arduino\\simple_keyer\\build\\sketch\\simple_keyer.ino.cpp.o"
+   "C:\\Users\\danq\\OneDrive\\Documents\\Arduino\\simple_keyer\\build\\sketch\\Keyer.cpp.o"
   ],
-  "file": "C:\\Users\\danq\\OneDrive\\Documents\\Arduino\\simple_keyer\\build\\sketch\\simple_keyer.ino.cpp"
+  "file": "C:\\Users\\danq\\OneDrive\\Documents\\Arduino\\simple_keyer\\build\\sketch\\Keyer.cpp"
  },
  {
   "directory": "c:\\Users\\danq\\OneDrive\\Documents\\Arduino\\simple_keyer",

@@ -29,3 +29,6 @@ Thumbs.db  # Windows file system file
 
 # Optionally ignore any libraries and dependencies if they are installed from a package manager
 # /libraries/
+build/compile_commands.json
+build/sketch/simple_keyer.ino.cpp.o
+build/compile_commands.json
