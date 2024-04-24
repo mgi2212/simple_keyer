@@ -1,0 +1,7 @@
+#line 1 "C:\\Users\\danq\\OneDrive\\Documents\\Arduino\\simple_keyer\\.vscode\\arduino.json"
+{
+    "board": "arduino:avr:uno",
+    "port": "COM18",
+    "output": "build",
+    "sketch": "simple_keyer.ino"
+}

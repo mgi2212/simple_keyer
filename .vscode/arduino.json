@@ -1,0 +1,6 @@
+{
+    "board": "arduino:avr:uno",
+    "port": "COM18",
+    "output": "build",
+    "sketch": "simple_keyer.ino"
+}
