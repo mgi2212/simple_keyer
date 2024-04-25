@@ -1,4 +1,4 @@
-# N7HQ Simple Keyer and Morse Code Translator
+# N7HQ Super Simple Keyer and Morse Code Translator
 
 This project includes a super simple Morse code keyer and text->morse translator, designed to be used with Arduino-based systems. It features adjustable speed input, keying for DIT and DAH signals, and translation capabilities to convert plain text to Morse code.
 
