@@ -43,6 +43,51 @@ This project includes a super simple Morse code keyer and text->morse translator
 3. Adjust the WPM as needed to match your transmission or practice speed.
 4. Send text through the serial monitor to see it translated and keyed out in Morse code.
 
+### Wiring Details:
+
+
+```
+[Arduino]                  [Other Components]
++--------+                 +------------------+
+|        |                 | 10k-ohm          |
+|        |                 | Linear Pot       |
+|        +----(A0)---------+ Center           |
+|        |                 |                  |
+|        |                 +--(GND)-----------+
+|        |                 |                  |
+|        |                 +--(VCC)-----------+
+|        |                 |                  |
+|        |                 | Button           |
+|        +----(D2)---------+ Dah              |
+|        |                 |                  |
+|        |                 | Button           |
+|        +----(D3)---------+ Dit              |
+|        |                 |                  |
+|        |                 |                  |
+|        |                 |                  |
+|        +----(D10)--------+ Keyer Output     |
+|        |                 |                  |
++--------+                 +------------------+
+```
+- **Potentiometer for Speed Control (WPM):**
+  - Connect the center pin of the potentiometer to analog pin `A0` on the Arduino. This pin reads the voltage level to determine the speed (WPM).
+  - Connect one side of the potentiometer to the ground (`GND`).
+  - Connect the other side to a positive voltage (`VCC`), typically 5V or 3.3V depending on your Arduino model.
+
+- **Buttons for Dah and Dit:**
+  - Connect the `Dah` button between digital pin `D2` and ground. When pressed, it will close the circuit and bring `D2` to LOW.
+  - Connect the `Dit` button between digital pin `D3` and ground. Similar to the `Dah` button, it closes the circuit and brings `D3` to LOW when pressed.
+
+- **Keyer Output:**
+  - Connect an output pin, in this case, digital pin `D10`, to the circuit component that acts as your keyer output. This could be an LED, a sound module, or a relay to simulate the keying.
+
+### Additional Notes:
+- Ensure all connections are secure.
+- Use pull-up or pull-down resistors on the buttons if required by your specific Arduino model to ensure stable readings.
+- Modify the pin assignments in your code if you choose different pins than those listed here.
+
+This diagram provides a clear layout for setting up your hardware components. Adjust the configuration as needed based on your specific requirements and hardware variations.
+
 ## Contributing
 
 Contributions to this project are welcome. Please fork the repository and submit a pull request with your enhancements.
