@@ -28,12 +28,12 @@ public:
 private:
     Keyer &keyer;
     String textToTranslate;
+    bool isSending = false;
     int currentCharIndex = 0;
     int symbolIndex = 0;
     const char *morse;
     TranslatorState currentState;
-    static const char *morseCode[36];
-    const char *morseCodeForCharacter(char c);
+    const char *charToMorse(char c);
     bool trySendSymbol(char symbol);
     bool trySendCharacterSpace();
     bool trySendWordSpace();
