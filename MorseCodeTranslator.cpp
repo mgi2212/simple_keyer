@@ -7,13 +7,21 @@ MorseCodeTranslator::MorseCodeTranslator(Keyer &keyer) : keyer(keyer) {}
 
 void MorseCodeTranslator::setText(const String &text)
 {
-    textToTranslate = text;
-    textToTranslate.toUpperCase();
-    if (textToTranslate.length() == 0)
+    if (isSending)
     {
+        Serial.println(F("Currently sending, cannot accept a new line."));
         return;
     }
 
+    textToTranslate = text;
+    textToTranslate.toUpperCase();
+    if (textToTranslate.length() == 0) 
+    {
+        Serial.println(F("Nothing to send."));
+        return;
+    }
+
+    isSending = true;
     currentCharIndex = 0;
     symbolIndex = 0;
     currentState = TS_IDLE;
@@ -37,9 +45,11 @@ void MorseCodeTranslator::update()
             }
             else
             {
-                // done sending
+                // complete
                 textToTranslate = "";
                 currentCharIndex = 0;
+                isSending = false;
+                Serial.println(F("Sending complete."));
             }
             break;
         case TS_SENDING_CHARACTER:
