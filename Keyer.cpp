@@ -96,7 +96,7 @@ void Keyer::update()
     case WAITING_ELEMENT_SPACE:
         if (currentTime >= waitingEndTime)
         {
-            if (iambicState)
+           if (iambicState)
             {
                 if (previousState == IAMBIC_DIT)
                 {
@@ -141,22 +141,20 @@ void Keyer::update()
 
 void Keyer::sendDit()
 {
+    microTimer.resume();
     toggleOutput(true);
     transmissionEndTime = microTimer.read() + ditDuration;
 }
 
 void Keyer::sendDah()
 {
+    microTimer.resume();
     toggleOutput(true);
     transmissionEndTime = microTimer.read() + dahDuration;
 }
 
 void Keyer::toggleOutput(bool state)
 {
-    if (state)
-    {
-        microTimer.resume();
-    }
     digitalWrite(outputPin, state ? HIGH : LOW);
     digitalWrite(LED_BUILTIN, state ? HIGH : LOW);
 }
@@ -171,54 +169,62 @@ void Keyer::updateTiming()
     wordSpace = (WPM_RESOLUTION / farnsworthWPM) * 7; // Space between words
 }
 
-void Keyer::sendCharacterSpace()
-{
-    noInterrupts(); // Disable interrupts to ensure atomicity
-    // Transition to character space state only if appropriate
-    if (currentState == IDLE || currentState == WAITING_ELEMENT_SPACE)
-    {
-        toggleOutput(false); // Ensure the output is off
-        currentState = WAITING_CHARACTER_SPACE;
-        waitingEndTime = microTimer.read() + characterSpace;
-    }
-    interrupts(); // Re-enable interrupts
-}
-
-void Keyer::sendWordSpace()
-{
-    noInterrupts();
-    // Transition to word space state only if appropriate
-    if (currentState == IDLE || currentState == WAITING_ELEMENT_SPACE)
-    {
-        toggleOutput(false); // Ensure the output is off
-        currentState = WAITING_WORD_SPACE;
-        waitingEndTime = microTimer.read() + wordSpace;
-    }
-    interrupts();
-}
-
+/// @brief returns true when keyer is ready for input (in IDLE state)
 bool Keyer::isReadyForInput() const
 {
-
     return currentState == IDLE; // Only consider ready if truly idle, not just between symbols
 }
 
-void Keyer::triggerDit()
+/// @brief Call only when keyer is ready for input (IDLE state)
+bool Keyer::sendCharacterSpace()
 {
-    if (isReadyForInput()) // Ensures that the keyer is idle and ready
+    if (!isReadyForInput())
     {
-        sendDit();
-        currentState = TRANSMITTING_DIT; // Update state appropriately
+        return false;
     }
+    microTimer.resume();
+    toggleOutput(false); // Ensure the output is off
+    currentState = WAITING_CHARACTER_SPACE;
+    waitingEndTime = microTimer.read() + characterSpace;
+    return true;
 }
 
-void Keyer::triggerDah()
+/// @brief Call only when keyer is ready for input (IDLE state)
+bool Keyer::sendWordSpace()
 {
-    if (isReadyForInput())
+    if (!isReadyForInput())
     {
-        sendDah();
-        currentState = TRANSMITTING_DAH;
+        return false;
     }
+    microTimer.resume();
+    toggleOutput(false); // Ensure the output is off
+    currentState = WAITING_WORD_SPACE;
+    waitingEndTime = microTimer.read() + wordSpace;
+    return true;
+}
+
+/// @brief starts sending a dit. Call only when keyer is ready for input (IDLE state)
+bool Keyer::triggerDit()
+{
+    if (!isReadyForInput())
+    {
+        return false;
+    }
+    sendDit();
+    currentState = TRANSMITTING_DIT; // Update state appropriately
+    return true;
+}
+
+/// @brief starts sending a dah. Call only when keyer is ready for input (IDLE state)
+bool Keyer::triggerDah()
+{
+    if (!isReadyForInput())
+    {
+        return false;
+    }
+    sendDah();
+    currentState = TRANSMITTING_DAH;
+    return true;
 }
 
 void Keyer::setWPM(int newWpm)

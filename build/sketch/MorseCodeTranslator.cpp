@@ -16,6 +16,7 @@ void MorseCodeTranslator::setText(const String &text)
 {
     textToTranslate = text;
     textToTranslate.toUpperCase();
+
     currentCharIndex = 0;
     symbolIndex = 0;
     currentState = TS_IDLE;
@@ -25,57 +26,74 @@ void MorseCodeTranslator::setText(const String &text)
 
 void MorseCodeTranslator::update()
 {
+    if (textToTranslate.length() == 0)
+    {
+        return;
+    }
+
     switch (currentState)
     {
-    case TS_IDLE:
-        if (currentCharIndex < textToTranslate.length())
-        {
-            currentState = TS_SENDING_CHARACTER;
-        }
-        break;
-    case TS_SENDING_CHARACTER:
-        if (textToTranslate[currentCharIndex] == ' ')
-        {
-            currentState = TS_END_OF_WORD;
-        }
-        else
-        {
-            morse = morseCodeForCharacter(textToTranslate[currentCharIndex]);
-            symbolIndex = 0; // Reset symbol index for new character
-            currentState = TS_SENDING_SYMBOL;
-        }
-        break;
-    case TS_SENDING_SYMBOL:
+        case TS_IDLE:
+            if (currentCharIndex < textToTranslate.length())
+            {
+                currentState = TS_SENDING_CHARACTER;
+            }
+            else
+            {
+                // done sending
+                textToTranslate = "";
+                currentCharIndex = 0;
+            }
+            break;
+        case TS_SENDING_CHARACTER:
+            if (textToTranslate[currentCharIndex] == ' ')
+            {
+                currentState = TS_END_OF_WORD;
+            }
+            else
+            {
+                morse = morseCodeForCharacter(textToTranslate[currentCharIndex]);
+                symbolIndex = 0; // Reset symbol index for new character
+                currentState = TS_SENDING_SYMBOL;
+            }
+            break;
+        case TS_SENDING_SYMBOL:
+            if (morse[symbolIndex] == '\0')
+            {
+                symbolIndex = 0;
+                currentState = TS_END_OF_CHARACTER;
+            }
+            else if (trySendSymbol(morse[symbolIndex]))
+            {
+                symbolIndex++;
+            }
+            break;
 
-        if (morse[symbolIndex] == '\0')
-        {
-            currentState = TS_END_OF_CHARACTER;
-        }
-        else if (keyer.isReadyForInput())
-        {
-            trySendSymbol(morse[symbolIndex++]);
-        }
-        break;
+        case TS_END_OF_CHARACTER:
+            if (trySendCharacterSpace())
+            {
+                currentState = TS_SENDING_CHARACTER_SPACE;
+            }
+            break;
 
-    case TS_END_OF_CHARACTER:
-        symbolIndex = 0;
-        trySendCharacterSpace();
-        currentState = TS_SENDING_CHARACTER_SPACE;
-        break;
+        case TS_END_OF_WORD:
+            if (trySendWordSpace())
+            {
+                currentState = TS_SENDING_WORD_SPACE;
+            }
+            break;
 
-    case TS_END_OF_WORD:
-        trySendWordSpace();
-        currentState = TS_SENDING_WORD_SPACE;
-        break;
+        case TS_SENDING_WORD_SPACE:
+        case TS_SENDING_CHARACTER_SPACE:
+            if (keyer.isReadyForInput())
+            {
+                currentCharIndex++;
+                currentState = TS_IDLE;
+            }
+            break;
 
-    case TS_SENDING_WORD_SPACE:
-    case TS_SENDING_CHARACTER_SPACE:
-        if (keyer.isReadyForInput())
-        {
-            currentCharIndex++;
-            currentState = TS_IDLE;
-        }
-        break;
+        default:
+            break;
     }
 }
 
@@ -92,51 +110,28 @@ const char *MorseCodeTranslator::morseCodeForCharacter(char c)
     return ""; // Return empty string for unsupported characters
 }
 
-void MorseCodeTranslator::trySendSymbol(char symbol)
+bool MorseCodeTranslator::trySendSymbol(char symbol)
 {
-    int retries = 10;
-    while (retries > 0 && !keyer.isReadyForInput())
+    if (symbol == '.')
     {
-        delay(1); // Delay to allow for keyer to become ready
-        retries--;
+        return keyer.triggerDit();
     }
-    if (keyer.isReadyForInput())
+    else if (symbol == '-')
     {
-        if (symbol == '.')
-        {
-            keyer.triggerDit();
-        }
-        else if (symbol == '-')
-        {
-            keyer.triggerDah();
-        }
+        return keyer.triggerDah();
+    }
+    else
+    {
+        return false;
     }
 }
 
-void MorseCodeTranslator::trySendCharacterSpace()
+bool MorseCodeTranslator::trySendCharacterSpace()
 {
-    int retries = 10;
-    while (retries > 0 && !keyer.isReadyForInput())
-    {
-        delay(1); // Delay to allow for keyer to become ready
-        retries--;
-    }
-    if (keyer.isReadyForInput())
-    {
-        keyer.sendCharacterSpace(); // Send space between characters
-    }
+    return keyer.sendCharacterSpace(); // Send space between characters
 }
 
-void MorseCodeTranslator::trySendWordSpace()
+bool MorseCodeTranslator::trySendWordSpace()
 {
-    int retries = 10;
-    while (retries > 0 && !keyer.isReadyForInput())
-    {
-        delay(1); // Delay to allow for keyer to become ready
-        retries--;
-    }
-    if (keyer.isReadyForInput())
-    {
-        keyer.sendWordSpace(); // Send space between characters
-    }
+    return keyer.sendWordSpace(); // Send space between characters
 }

@@ -27,12 +27,12 @@ public:
     Keyer(int ditPin, int dahPin, int outputPin);
     void setup();
     void update();
-    void sendCharacterSpace();
-    void sendWordSpace();
+    bool sendCharacterSpace();
+    bool sendWordSpace();
     void setWPM(int wpm);
     int getWPM() const;
-    void triggerDah();
-    void triggerDit();
+    bool triggerDah();
+    bool triggerDit();
     bool isReadyForInput() const;
 
 private:

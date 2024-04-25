@@ -34,10 +34,9 @@ private:
     TranslatorState currentState;
     static const char *morseCode[36];
     const char *morseCodeForCharacter(char c);
-    void sendCurrentSymbol(const char *morse);
-    void trySendSymbol(char symbol);
-    void trySendCharacterSpace();
-    void trySendWordSpace();
+    bool trySendSymbol(char symbol);
+    bool trySendCharacterSpace();
+    bool trySendWordSpace();
 };
 
 #endif // MORSE_CODE_TRANSLATOR_H
