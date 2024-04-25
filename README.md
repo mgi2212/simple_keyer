@@ -16,6 +16,24 @@ This project includes a super simple Morse code keyer and text->morse translator
 - `MorseCodeTranslator.cpp` and `MorseCodeTranslator.h`: Handles the translation of text to Morse code.
 - `simple_keyer.ino`: Arduino sketch that integrates the keyer and translator with hardware setup.
 
+## Libraries Used
+
+This project requires the following Arduino libraries:
+
+- **Bounce2**: Used for debouncing button inputs. This library provides stable, reliable button state readings.
+- **Timer**: Required for handling precise timing operations. Ensures that Morse code timings are accurate to the specification.
+
+### Installing Libraries
+
+To install these libraries, follow these steps in the Arduino IDE:
+
+1. Open the Arduino IDE.
+2. Go to **Sketch** > **Include Library** > **Manage Libraries**.
+3. In the Library Manager, enter "Bounce2" in the search bar, find the Bounce2 library in the list, and click **Install**.
+4. Search for "Timer" in the Library Manager, find the Timer library, and click **Install**.
+
+Ensure you have these libraries installed before compiling and uploading the sketch to your Arduino board.
+
 ## Hardware Requirements
 
 - Arduino board (Uno, Mega, etc.)
