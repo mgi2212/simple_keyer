@@ -7,6 +7,10 @@
 #include <Arduino.h>
 #include <Bounce2.h>
 #include <Timer.h>
+#include <MD_AD9833.h>
+#include <SPI.h>
+
+#define SIDETONE_FREQUENCY 1000
 
 // Define the states of the state machine
 enum KeyerState
@@ -24,7 +28,7 @@ enum KeyerState
 class Keyer
 {
 public:
-    Keyer(int ditPin, int dahPin, int outputPin);
+    Keyer(int ditPin, int dahPin, int outputPin, MD_AD9833 &toneGen);
     void setup();
     void update();
     bool sendCharacterSpace();
@@ -37,6 +41,7 @@ public:
 
 private:
     int ditPin, dahPin, outputPin;
+    MD_AD9833 &toneGen;
     Bounce2::Button debouncerDit;
     Bounce2::Button debouncerDah;
     Timer microTimer;

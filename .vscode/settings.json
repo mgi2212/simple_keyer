@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "algorithm": "cpp",
+        "associative_base": "cpp",
+        "string": "cpp"
+    }
+}

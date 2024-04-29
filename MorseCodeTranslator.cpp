@@ -3,7 +3,27 @@
 
 #include "MorseCodeTranslator.h"
 
-MorseCodeTranslator::MorseCodeTranslator(Keyer &keyer) : keyer(keyer) {}
+
+MorseCodeTranslator::MorseCodeTranslator(Keyer &keyer) : keyer(keyer) { }
+
+// Create an array of MorseCodeMapping with all the mappings
+const MorseCodeMapping MorseCodeTranslator::morseMap[] = {
+    {"-.-.--", '!'}, {".-..-.", '"'}, {"...-..-", '$'}, {".-...", '&'}, {".----.", '\''},
+    {"-.--.", '('}, {"-.--.-", ')'}, {".-.-.", '+'}, {"--..--", ','}, {"-....-", '-'},
+    {".-.-.-", '.'}, {"-..-.", '/'}, {"-----", '0'}, {".----", '1'}, {"..---", '2'},
+    {"...--", '3'}, {"....-", '4'}, {".....", '5'}, {"-....", '6'}, {"--...", '7'},
+    {"---..", '8'}, {"----.", '9'}, {"---...", ':'}, {"-.-.-.", ';'}, {"-...-", '='},
+    {"..--..", '?'}, {".--.-.", '@'}, {".-", 'A'}, {"-...", 'B'}, {"-.-.", 'C'},
+    {"-..", 'D'}, {".", 'E'}, {"..-.", 'F'}, {"--.", 'G'}, {"....", 'H'}, {"..", 'I'},
+    {".---", 'J'}, {"-.-", 'K'}, {".-..", 'L'}, {"--", 'M'}, {"-.", 'N'}, {"---", 'O'},
+    {".--.", 'P'}, {"--.-", 'Q'}, {".-.", 'R'}, {"...", 'S'}, {"-", 'T'}, {"..-", 'U'},
+    {"...-", 'V'}, {".--", 'W'}, {"-..-", 'X'}, {"-.--", 'Y'}, {"--..", 'Z'},
+    {".-...", '['}, {"...-.-", ']'}, {"..--.", '^'}, {".--.-", '_'}, {"....-", '`'},
+    {".-.-", 'Ä'}, {".--.-", 'Á'}, {"..-..", 'É'}, {"--.--", 'Ñ'}, {"---.", 'Ö'},
+    {"..--", 'Ü'}, {"..._._", '<'}
+};
+
+const int MorseCodeTranslator::morseMapSize = sizeof(morseMap) / sizeof(morseMap[0]);
 
 void MorseCodeTranslator::setText(const String &text)
 {
@@ -59,7 +79,7 @@ void MorseCodeTranslator::update()
             }
             else
             {
-                morse = charToMorse(textToTranslate[currentCharIndex]);
+                morse = getMorse(textToTranslate[currentCharIndex]);
                 symbolIndex = 0; // Reset symbol index for new character
                 currentState = TS_SENDING_SYMBOL;
             }
@@ -130,76 +150,21 @@ bool MorseCodeTranslator::trySendWordSpace()
     return keyer.sendWordSpace(); // Send space between characters
 }
 
-// Function to translate characters to Morse code
-const char* MorseCodeTranslator::charToMorse(char c) 
-{
-    switch (c) 
-    {
-        case '!': return "-.-.--";   // exclamation mark
-        case '"': return ".-..-.";   // RR
-        case '$': return "...-..-";  // SX
-        case '&': return ".-...";    // ampersand
-        case '\'': return ".----.";  // DN
-        case '(': return "-.--.";    // KN
-        case ')': return "-.--.-";   // KK
-        case '+': return ".-.-.";    // AR
-        case ',': return "--..--";   // comma
-        case '-': return "-....-";   // hyphen
-        case '.': return ".-.-.-";   // period
-        case '/': return "-..-.";    // DN
-        case '0': return "-----";
-        case '1': return ".----";
-        case '2': return "..---";
-        case '3': return "...--";
-        case '4': return "....-";
-        case '5': return ".....";
-        case '6': return "-....";
-        case '7': return "--...";
-        case '8': return "---..";
-        case '9': return "----.";
-        case ':': return "---...";   // colon
-        case ';': return "-.-.-.";   // AA
-        case '=': return "-...-";    // BT
-        case '?': return "..--..";   // ?
-        case '@': return ".--.-.";   // AC
-        case 'A': return ".-";
-        case 'B': return "-...";
-        case 'C': return "-.-.";
-        case 'D': return "-..";
-        case 'E': return ".";
-        case 'F': return "..-.";
-        case 'G': return "--.";
-        case 'H': return "....";
-        case 'I': return "..";
-        case 'J': return ".---";
-        case 'K': return "-.-";
-        case 'L': return ".-..";
-        case 'M': return "--";
-        case 'N': return "-.";
-        case 'O': return "---";
-        case 'P': return ".--.";
-        case 'Q': return "--.-";
-        case 'R': return ".-.";
-        case 'S': return "...";
-        case 'T': return "-";
-        case 'U': return "..-";
-        case 'V': return "...-";
-        case 'W': return ".--";
-        case 'X': return "-..-";
-        case 'Y': return "-.--";
-        case 'Z': return "--..";
-        case '[': return ".-...";   // AS
-        case ']': return "...-.-";  // SK
-        case '^': return "..--.";   // caret
-        case '_': return ".--.-";   // underscore
-        case '`': return "....-";   // alternative SK
-        case 'Ä': return ".-.-";    // Ä
-        case 'Á': return ".--.-";   // Á
-        case 'É': return "..-..";   // É
-        case 'Ñ': return "--.--";   // Ñ
-        case 'Ö': return "---.";    // Ö
-        case 'Ü': return "..--";    // Ü
-        case '<': return "..._._";  // SK
-        default: return "";         // default case for unsupported characters
+char MorseCodeTranslator::getChar(const String& morse) {
+    // Ensure the Morse code exists to avoid creating a default entry
+    for (int i = 0; i < morseMapSize; i++) {
+        if (morse == morseMap[i].code) {
+            return morseMap[i].character;
+        }
     }
+    return '\0'; // Return null character if not found}
+}
+
+const char* MorseCodeTranslator::getMorse(char c) {
+    for (int i = 0; i < morseMapSize; i++) {
+        if (c == morseMap[i].character) {
+            return morseMap[i].code;
+        }
+    }
+    return ""; // Return empty string if character not found
 }

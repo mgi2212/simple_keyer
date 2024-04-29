@@ -3,6 +3,8 @@
 
 #include "Keyer.h"
 
+#define PWM_FREQUENCY 600 // PWM sidetone frequency in Hz
+#define DIGITAL_PIN_DEBOUNCE_INTERVAL 5
 // comment out for milli-second timer
 #define USE_HIGHRES_TIMER 1
 
@@ -12,7 +14,12 @@
 #define WPM_RESOLUTION 1200
 #endif
 
-Keyer::Keyer(int ditPin, int dahPin, int outputPin) : ditPin(ditPin), dahPin(dahPin), outputPin(outputPin), wpm(20), farnsworthWPM(15), currentState(IDLE)
+#define TONE_PIN A1
+
+
+Keyer::Keyer(int ditPin, int dahPin, int outputPin, MD_AD9833 &toneGen) : 
+    ditPin(ditPin), dahPin(dahPin), outputPin(outputPin),
+    toneGen(toneGen), wpm(20), farnsworthWPM(15), currentState(IDLE)
 {
     debouncerDah = Bounce2::Button();
     debouncerDit = Bounce2::Button();
@@ -31,6 +38,8 @@ void Keyer::setup()
     pinMode(ditPin, INPUT_PULLUP);
     pinMode(dahPin, INPUT_PULLUP);
     pinMode(outputPin, OUTPUT);
+    pinMode(TONE_PIN, OUTPUT);
+
     pinMode(LED_BUILTIN, OUTPUT);
 
     digitalWrite(outputPin, LOW);
@@ -39,9 +48,15 @@ void Keyer::setup()
     debouncerDit.attach(ditPin, INPUT_PULLUP);
     debouncerDah.attach(dahPin, INPUT_PULLUP);
 
-    debouncerDit.interval(5);
-    debouncerDah.interval(5);
+    debouncerDit.interval(DIGITAL_PIN_DEBOUNCE_INTERVAL);
+    debouncerDah.interval(DIGITAL_PIN_DEBOUNCE_INTERVAL);
+
+    toneGen.begin();
+    toneGen.setFrequency(MD_AD9833::CHAN_0, SIDETONE_FREQUENCY);
+    toneGen.setMode(MD_AD9833::MODE_OFF);
+
     microTimer.start();
+
 }
 
 void Keyer::update()
@@ -157,6 +172,16 @@ void Keyer::toggleOutput(bool state)
 {
     digitalWrite(outputPin, state ? HIGH : LOW);
     digitalWrite(LED_BUILTIN, state ? HIGH : LOW);
+    if (state) 
+    {
+        toneGen.setMode(MD_AD9833::MODE_SINE);
+        tone(TONE_PIN, 1000);
+    }
+    else
+    {
+        toneGen.setMode(MD_AD9833::MODE_OFF);
+        noTone(TONE_PIN);
+    }
 }
 
 // these are approximate values for testing, a more robust "fist" can be achieved with some more work.

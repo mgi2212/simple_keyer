@@ -18,12 +18,20 @@ enum TranslatorState
     TS_SENDING_WORD_SPACE
 };
 
+struct MorseCodeMapping {
+    const char* code;
+    char character;
+};
+
+
 class MorseCodeTranslator
 {
 public:
     MorseCodeTranslator(Keyer &keyer);
     void setText(const String &text);
     void update();
+    static const MorseCodeMapping morseMap[];
+    static const int morseMapSize;
 
 private:
     Keyer &keyer;
@@ -33,7 +41,8 @@ private:
     int symbolIndex = 0;
     const char *morse;
     TranslatorState currentState;
-    const char *charToMorse(char c);
+    const char* getMorse(char c);
+    char getChar(const String& morse); 
     bool trySendSymbol(char symbol);
     bool trySendCharacterSpace();
     bool trySendWordSpace();

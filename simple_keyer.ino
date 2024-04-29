@@ -10,12 +10,16 @@
 #define INVERT_WPM true           // allows for idiots (like me) that wire the pot backwards
 #define NUM_READINGS 10           // Number of samples for debouncing wpm pot
 
-const int dahPin = 2;             // pin for DAH
-const int ditPin = 3;             // pin for DIT
-const int keyerOutputPin = 10;    // keyer ouput pin
-const int wpmSpeedPin = A0;       // wpm wiper (analog) pin
+#define KEYER_DIT_PIN      3     // pin for DIT
+#define KEYER_DAH_PIN      2     // pin for DAH
+#define KEYER_OUTPUT_PIN  10     // keyer ouput pin
+#define KEYER_SPEED_PIN   A0     // wpm wiper (analog) pin
 
-Keyer keyer(ditPin, dahPin, keyerOutputPin);
+// Pins for SPI comm with the AD9833 IC
+#define AD9833_FSYNC_PIN  10	// SPI Load pin number (FSYNC in AD9833 usage)
+
+MD_AD9833 toneGen(AD9833_FSYNC_PIN);
+Keyer keyer(KEYER_DIT_PIN, KEYER_DAH_PIN, KEYER_OUTPUT_PIN, toneGen);
 MorseCodeTranslator translator(keyer);
 
 /// @brief debounced speed control
@@ -28,7 +32,7 @@ void updateWPM()
   static int lastWPM = 0;            // Last WPM value to check for significant change
 
   // Read the new value
-  int newReading = analogRead(wpmSpeedPin);
+  int newReading = analogRead(KEYER_SPEED_PIN);
 
   total = total - readings[readIndex];        // Subtract the last reading
   readings[readIndex] = newReading;           // Read from the sensor
@@ -52,7 +56,7 @@ void updateWPM()
 void setup()
 {
   Serial.begin(SERIAL_BAUD);
-  pinMode(wpmSpeedPin, INPUT);
+  pinMode(KEYER_SPEED_PIN, INPUT);
   keyer.setup();
 }
 
