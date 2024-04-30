@@ -1,5 +1,35 @@
-// N7HQ simple keyer
-// April 2024
+/***********************************************************************
+ * File: keyer.h
+ * Author: Dan Quigley, N7HQ
+ * Date: April 2024
+ *
+ * Description:
+ *     This file contains the implementation of the Keyer class which
+ *     controls a Morse code keyer with PWM sidetone generation. The
+ *     keyer is designed for amateur radio applications, supporting
+ *     adjustable words per minute (WPM) and sidetone frequency, with
+ *     high-resolution timing options for precise control. It supports
+ *     both iambic and straight keying modes.
+ *
+ * Usage:
+ *     Include this file in an Arduino project that requires Morse code
+ *     keying functionality. Ensure that the hardware is connected to
+ *     the specified pins and that the AD9833 module and other dependencies
+ *     are properly set up.
+ *
+ * Dependencies:
+ *     - Arduino.h: Basic Arduino library for hardware control.
+ *     - Bounce2: Debouncing library for button inputs.
+ *     - MD_AD9833.h: Library for controlling AD9833 modules via SPI.
+ *
+ * Revisions:
+ *     1.0 - Initial release. Provides basic keying functionalities and PWM tone generation.
+ *
+ * Notes:
+ *     This implementation uses high-resolution timers to ensure accurate timing
+ *     which is critical for Morse code applications. The code structure allows
+ *     for easy integration and customization in amateur radio projects.
+ ***********************************************************************/
 
 #include "Keyer.h"
 
@@ -14,12 +44,10 @@
 #define WPM_RESOLUTION 1200
 #endif
 
-#define TONE_PIN A1
+#define TONE_PIN 7
 
-
-Keyer::Keyer(int ditPin, int dahPin, int outputPin, MD_AD9833 &toneGen) : 
-    ditPin(ditPin), dahPin(dahPin), outputPin(outputPin),
-    toneGen(toneGen), wpm(20), farnsworthWPM(15), currentState(IDLE)
+Keyer::Keyer(int ditPin, int dahPin, int outputPin, MD_AD9833 &toneGen) : ditPin(ditPin), dahPin(dahPin), outputPin(outputPin),
+                                                                          toneGen(toneGen), wpm(20), farnsworthWPM(15), currentState(IDLE)
 {
     debouncerDah = Bounce2::Button();
     debouncerDit = Bounce2::Button();
@@ -56,7 +84,6 @@ void Keyer::setup()
     toneGen.setMode(MD_AD9833::MODE_OFF);
 
     microTimer.start();
-
 }
 
 void Keyer::update()
@@ -111,7 +138,7 @@ void Keyer::update()
     case WAITING_ELEMENT_SPACE:
         if (currentTime >= waitingEndTime)
         {
-           if (iambicState)
+            if (iambicState)
             {
                 if (previousState == IAMBIC_DIT)
                 {
@@ -172,14 +199,14 @@ void Keyer::toggleOutput(bool state)
 {
     digitalWrite(outputPin, state ? HIGH : LOW);
     digitalWrite(LED_BUILTIN, state ? HIGH : LOW);
-    if (state) 
+    if (state)
     {
-        toneGen.setMode(MD_AD9833::MODE_SINE);
+        // toneGen.setMode(MD_AD9833::MODE_SINE);
         tone(TONE_PIN, 1000);
     }
     else
     {
-        toneGen.setMode(MD_AD9833::MODE_OFF);
+        // toneGen.setMode(MD_AD9833::MODE_OFF);
         noTone(TONE_PIN);
     }
 }

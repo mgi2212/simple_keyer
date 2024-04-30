@@ -1,5 +1,35 @@
-// N7HQ simple keyer
-// April 2024
+/***********************************************************************
+ * File: keyer.h
+ * Author: Dan Quigley, N7HQ
+ * Date: April 2024
+ *
+ * Description:
+ *     This file contains the implementation of a Morse code keyer for
+ *     use in amateur radio communications. The keyer supports both
+ *     iambic keying and straight key use. It includes debounce logic
+ *     for key presses and can be configured for different words per
+ *     minute (WPM) speeds, including Farnsworth timing adjustments.
+ *
+ * Usage:
+ *     Compile with Arduino compiler and upload to an Arduino board.
+ *     Connect the appropriate pins to a Morse code key and a speaker
+ *     or other output device to receive audio feedback.
+ *
+ * Dependencies:
+ *     Requires Arduino.h for basic Arduino functions and types.
+ *     Bounce2 library for debouncing key inputs.
+ *     Timer library for managing timing events.
+ *     MD_AD9833 library for generating audio tone outputs via SPI.
+ *     SPI library for communication.
+ *
+ * Revisions:
+ *     1.0 - Initial release.
+ *
+ * Notes:
+ *     This code is for demonstration purposes only and is not optimized
+ *     for production use. It is intended as a functional prototype for
+ *     testing and educational purposes.
+ ***********************************************************************/
 
 #ifndef Keyer_h
 #define Keyer_h

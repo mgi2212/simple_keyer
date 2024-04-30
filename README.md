@@ -58,8 +58,9 @@ Ensure you have these libraries installed before compiling and uploading the ske
 
 1. Power on the Arduino.
 2. Use the DIT and DAH buttons to input Morse code manually.
-3. Adjust the WPM as needed to match your transmission or practice speed.
-4. Send text through the serial monitor to see it translated and keyed out in Morse code.
+3. Connect headphones or small audio amp to the sidetone pin.
+4. Adjust the WPM as needed to match your transmission or practice speed.
+5. Send text through the serial monitor to see it translated and keyed out in Morse code.
 
 ### Wiring Details:
 
@@ -81,7 +82,7 @@ Ensure you have these libraries installed before compiling and uploading the ske
 |        |                 | Button           |
 |        +----(D3)---------+ Dit              |
 |        |                 |                  |
-|        |                 |                  |
+|        +----(D7)---------+ Sidetone         |
 |        |                 |                  |
 |        +----(D10)--------+ Keyer Output     |
 |        |                 |                  |
