@@ -102,7 +102,11 @@ void MorseCodeTranslator::setText(const String &text)
 {
     if (isSending)
     {
+
+#ifdef DEBUG_OUTPUT
         Serial.println(F("Currently sending, cannot accept a new line."));
+#endif        
+
         return;
     }
 
@@ -110,7 +114,10 @@ void MorseCodeTranslator::setText(const String &text)
     textToTranslate.toUpperCase();
     if (textToTranslate.length() == 0)
     {
+
+#ifdef DEBUG_OUTPUT
         Serial.println(F("Nothing to send."));
+#endif        
         return;
     }
 
@@ -118,8 +125,12 @@ void MorseCodeTranslator::setText(const String &text)
     currentCharIndex = 0;
     symbolIndex = 0;
     currentState = TS_IDLE;
+
+#ifdef DEBUG_OUTPUT
     Serial.print(F("Sending: "));
     Serial.println(textToTranslate);
+#endif
+
 }
 
 void MorseCodeTranslator::update()
@@ -142,7 +153,11 @@ void MorseCodeTranslator::update()
             textToTranslate = "";
             currentCharIndex = 0;
             isSending = false;
+
+#ifdef DEBUG_OUTPUT
             Serial.println(F("Send complete."));
+#endif
+
         }
         break;
     case TS_SENDING_CHARACTER:

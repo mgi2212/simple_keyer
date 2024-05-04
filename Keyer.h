@@ -35,12 +35,14 @@
 #define Keyer_h
 
 #include <Arduino.h>
-#include <limits.h>
-#include <Bounce2.h>
-#include <Timer.h>
 #include <AD9833.h>
+#include <Bounce2.h>
+
+//#define DEBUG_OUTPUT 1
 
 #define SIDETONE_FREQUENCY 1000
+#define INVERT_WPM true   // allows for idiots (like me) that wire the pot backwards
+#define NUM_READINGS 10   // Number of samples for debouncing wpm pot
 
 // Define the states of the state machine
 enum KeyerState
@@ -57,13 +59,13 @@ enum KeyerState
 
 struct KeyerConfig
 {
-  int ditPin;
-  int dahPin;
-  int outputPin;
-  int pttPin;
-  int ledPin;
-  int pttHangTime;
-  int wpmSpeedPin;
+    int ditPin;
+    int dahPin;
+    int outputPin;
+    int pttPin;
+    int ledPin;
+    int pttHangTime;
+    int wpmSpeedPin;
 };
 
 class Keyer
@@ -85,7 +87,6 @@ private:
     AD9833 &toneGen;
     Bounce2::Button debouncerDit;
     Bounce2::Button debouncerDah;
-    Timer microTimer;
 
     unsigned long currentTime;
     unsigned long transmissionStartTime;
@@ -98,7 +99,10 @@ private:
     unsigned long characterSpace;
     unsigned long wordSpace;
     bool pttTimerStarted;
+
+#ifdef DEBUG_OUTPUT
     char strBuffer[256]; // Buffer to hold formatted strings
+#endif    
 
     int wpm;           // Words per minute for Morse code transmission
     int farnsworthWPM; // Adjusted WPM for Farnsworth timing
@@ -113,6 +117,7 @@ private:
     void handleIambicKeying();
     void beginTransmission();
     void checkEndTransmission();
+    void updateWPM();
 };
 
 #endif
