@@ -33,7 +33,7 @@
 
 #include "Keyer.h"
 
-#define PWM_FREQUENCY 600 // PWM sidetone frequency in Hz
+#define PWM_FREQUENCY 600  // PWM sidetone frequency in Hz
 #define DIGITAL_PIN_DEBOUNCE_INTERVAL 5
 // comment out for milli-second timer
 #define USE_HIGHRES_TIMER 1
@@ -46,254 +46,260 @@
 
 #define TONE_PIN 7
 
-Keyer::Keyer(int ditPin, int dahPin, int outputPin, MD_AD9833 &toneGen) : ditPin(ditPin), dahPin(dahPin), outputPin(outputPin),
-                                                                          toneGen(toneGen), wpm(20), farnsworthWPM(15), currentState(IDLE)
-{
-    debouncerDah = Bounce2::Button();
-    debouncerDit = Bounce2::Button();
+Keyer::Keyer(KeyerConfig &config, AD9833 &toneGen)
+  : config(config), toneGen(toneGen), wpm(20), farnsworthWPM(15), currentState(IDLE) {
+  debouncerDah = Bounce2::Button();
+  debouncerDit = Bounce2::Button();
 
 #ifdef USE_HIGHRES_TIMER
-    microTimer = Timer(MICROS); // micro-second timer resolution
+  microTimer = Timer(MICROS);  // micro-second timer resolution
+  config.pttHangTime *= 1000;
 #else
-    microTimer = Timer(); // milli-second timer resolution
+  microTimer = Timer();  // milli-second timer resolution
 #endif
 }
 
-void Keyer::setup()
-{
-    updateTiming();
+void Keyer::setup() {
+  updateTiming();
 
-    pinMode(ditPin, INPUT_PULLUP);
-    pinMode(dahPin, INPUT_PULLUP);
-    pinMode(outputPin, OUTPUT);
-    pinMode(TONE_PIN, OUTPUT);
+  pinMode(config.ditPin, INPUT_PULLUP);
+  pinMode(config.dahPin, INPUT_PULLUP);
+  pinMode(config.outputPin, OUTPUT);
+  pinMode(config.pttPin, OUTPUT);
+  pinMode(config.ledPin, OUTPUT);
 
-    pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(config.outputPin, LOW);
+  digitalWrite(config.pttPin, LOW);
+  digitalWrite(config.ledPin, LOW);
 
-    digitalWrite(outputPin, LOW);
-    digitalWrite(LED_BUILTIN, LOW);
+  debouncerDit.attach(config.ditPin, INPUT_PULLUP);
+  debouncerDah.attach(config.dahPin, INPUT_PULLUP);
 
-    debouncerDit.attach(ditPin, INPUT_PULLUP);
-    debouncerDah.attach(dahPin, INPUT_PULLUP);
+  debouncerDit.interval(DIGITAL_PIN_DEBOUNCE_INTERVAL);
+  debouncerDah.interval(DIGITAL_PIN_DEBOUNCE_INTERVAL);
 
-    debouncerDit.interval(DIGITAL_PIN_DEBOUNCE_INTERVAL);
-    debouncerDah.interval(DIGITAL_PIN_DEBOUNCE_INTERVAL);
+  toneGen.begin();
+  Serial.println(F("AD9833 enabled."));
 
-    toneGen.begin();
-    toneGen.setFrequency(MD_AD9833::CHAN_0, SIDETONE_FREQUENCY);
-    toneGen.setMode(MD_AD9833::MODE_OFF);
+  toneGen.setWave(AD9833_OFF);
+  toneGen.setFrequency(880.0, 0);
+  toneGen.setFrequencyChannel(0);
 
-    microTimer.start();
+  microTimer.start();
 }
 
-void Keyer::update()
-{
-    unsigned long currentTime = (microTimer.state() != PAUSED) ? microTimer.read() : 0;
+void Keyer::update() {
+  unsigned long previousTime = currentTime;  // Store previous time
+  currentTime = microTimer.read();
 
-    debouncerDit.update();
-    debouncerDah.update();
+  // Detect rollover
+  bool rollover = (currentTime < previousTime);
 
-    bool ditState = !debouncerDit.read();
-    bool dahState = !debouncerDah.read();
-    bool iambicState = ditState && dahState;
+  // Handle rollover by adjusting currentTime
+  if (rollover) {
+    unsigned long rolloverAdjustment = (ULONG_MAX - previousTime) + currentTime + 1;
+    currentTime += rolloverAdjustment;
+  }
+  
+  debouncerDit.update();
+  debouncerDah.update();
 
-    switch (currentState)
-    {
+  bool ditState = !debouncerDit.read();
+  bool dahState = !debouncerDah.read();
+  bool iambicState = ditState && dahState;
+
+  switch (currentState) {
     case IDLE:
-        if (iambicState)
-        {
-            sendDit(); // Start with a dit in iambic mode
-            currentState = IAMBIC_DIT;
-        }
-        else if (ditState)
-        {
-            sendDit();
-            currentState = TRANSMITTING_DIT;
-        }
-        else if (dahState)
-        {
-            sendDah();
-            currentState = TRANSMITTING_DAH;
-        }
-        else
-        {
-            microTimer.pause();
-        }
-        break;
+      if (iambicState) {
+        sendDit();  // Start with a dit in iambic mode
+        currentState = IAMBIC_DIT;
+      } else if (ditState) {
+        sendDit();
+        currentState = TRANSMITTING_DIT;
+      } else if (dahState) {
+        sendDah();
+        currentState = TRANSMITTING_DAH;
+      }
+      break;
 
     case IAMBIC_DIT:
     case IAMBIC_DAH:
-        if (currentTime >= transmissionEndTime)
-        {
-            toggleOutput(false); // Ensure output is off before next element
-            if (iambicState)
-            { // Check if still in iambic mode
-                previousState = currentState;
-                waitingEndTime = currentTime + elementSpace; // Setup waiting end time
-            }
-            currentState = WAITING_ELEMENT_SPACE; // Wait for element space
+      if (currentTime >= transmissionEndTime) {
+        toggleOutput(false);  // Ensure output is off before next element
+        if (iambicState) {    // Check if still in iambic mode
+          previousState = currentState;
+          waitingEndTime = currentTime + elementSpace;  // Setup waiting end time
         }
-        break;
+        currentState = WAITING_ELEMENT_SPACE;  // Wait for element space
+      }
+      break;
 
     case WAITING_ELEMENT_SPACE:
-        if (currentTime >= waitingEndTime)
-        {
-            if (iambicState)
-            {
-                if (previousState == IAMBIC_DIT)
-                {
-                    currentState = IAMBIC_DAH;
-                    sendDah();
-                }
-                else
-                {
-                    currentState = IAMBIC_DIT;
-                    sendDit();
-                }
-            }
-            else
-            {
-                currentState = IDLE;
-            }
+      if (currentTime >= waitingEndTime) {
+        if (iambicState) {
+          if (previousState == IAMBIC_DIT) {
+            currentState = IAMBIC_DAH;
+            sendDah();
+          } else {
+            currentState = IAMBIC_DIT;
+            sendDit();
+          }
+        } else {
+          currentState = IDLE;
         }
-        break;
+      }
+      break;
 
     case TRANSMITTING_DIT:
     case TRANSMITTING_DAH:
-        if (currentTime >= transmissionEndTime)
-        {
-            toggleOutput(false);
-            currentState = WAITING_ELEMENT_SPACE;
-            waitingEndTime = currentTime + elementSpace;
-        }
-        break;
+      if (currentTime >= transmissionEndTime) {
+        toggleOutput(false);
+        currentState = WAITING_ELEMENT_SPACE;
+        waitingEndTime = currentTime + elementSpace;
+      }
+      break;
 
     case WAITING_CHARACTER_SPACE:
     case WAITING_WORD_SPACE:
-        if (currentTime >= waitingEndTime)
-        {
-            currentState = IDLE; // Transition back to IDLE after the space period
-        }
-        break;
+      if (currentTime >= waitingEndTime) {
+        currentState = IDLE;  // Transition back to IDLE after the space period
+      }
+      break;
 
     default:
-        break;
-    }
+      break;
+  }
+
+  checkEndTransmission();
 }
 
-void Keyer::sendDit()
-{
-    microTimer.resume();
-    toggleOutput(true);
-    transmissionEndTime = microTimer.read() + ditDuration;
-}
-
-void Keyer::sendDah()
-{
-    microTimer.resume();
-    toggleOutput(true);
-    transmissionEndTime = microTimer.read() + dahDuration;
-}
-
-void Keyer::toggleOutput(bool state)
-{
-    digitalWrite(outputPin, state ? HIGH : LOW);
-    digitalWrite(LED_BUILTIN, state ? HIGH : LOW);
-    if (state)
+void Keyer::beginTransmission()
+{   
+    if (pttTimerStarted || (digitalRead(config.pttPin) == HIGH))
     {
-        // toneGen.setMode(MD_AD9833::MODE_SINE);
-        tone(TONE_PIN, 1000);
+        return;
     }
-    else
+
+    digitalWrite(config.pttPin, HIGH);  // Assert PTT HIGH on transmission start
+    transmissionStartTime = currentTime;
+    pttTimerStarted = true;
+    Serial.println(F("PTT: ON"));
+
+}
+
+void Keyer::checkEndTransmission()
+{
+    if (
+      pttTimerStarted && 
+      isReadyForInput() &&
+      (currentTime > transmissionStartTime) &&
+      (currentTime >= lastKeyEndTime + config.pttHangTime) &&
+      (currentTime >= waitingEndTime + config.pttHangTime)) 
     {
-        // toneGen.setMode(MD_AD9833::MODE_OFF);
-        noTone(TONE_PIN);
+        digitalWrite(config.pttPin, LOW);  // Turn off PTT after hang time
+        pttTimerStarted = false;           // Reset flag
+#ifdef USE_HIGHRES_TIMER
+        float pttTime = (currentTime - transmissionStartTime) / 1000000.0;
+#else if
+        float pttTime = (currentTime - transmissionStartTime) / 1000.0;
+#endif 
+        sprintf(strBuffer, "PTT: OFF: (%.2fs)", pttTime);
+        Serial.println(strBuffer);
     }
+}
+
+void Keyer::sendDit() {
+  toggleOutput(true);
+  transmissionEndTime = microTimer.read() + ditDuration;
+  lastKeyEndTime = transmissionEndTime;
+}
+
+void Keyer::sendDah() {
+  toggleOutput(true);
+  transmissionEndTime = microTimer.read() + dahDuration;
+  lastKeyEndTime = transmissionEndTime;
+}
+
+void Keyer::toggleOutput(bool state) {
+  if (state)
+  {
+    beginTransmission();
+  }
+  digitalWrite(config.ledPin, state ? HIGH : LOW);
+  digitalWrite(config.outputPin, state ? HIGH : LOW);
+  toneGen.setWave(state ? AD9833_SINE : AD9833_OFF);
 }
 
 // these are approximate values for testing, a more robust "fist" can be achieved with some more work.
-void Keyer::updateTiming()
-{
-    ditDuration = WPM_RESOLUTION / wpm;               // Duration of a dit
-    dahDuration = 3 * ditDuration;                    // Dah is three times the duration of dit
-    elementSpace = ditDuration;                       // Space between elements
-    characterSpace = 3 * ditDuration;                 // Space between characters
-    wordSpace = (WPM_RESOLUTION / farnsworthWPM) * 7; // Space between words
+void Keyer::updateTiming() {
+  ditDuration = WPM_RESOLUTION / wpm;                // Duration of a dit
+  dahDuration = 3 * ditDuration;                     // Dah is three times the duration of dit
+  elementSpace = ditDuration;                        // Space between elements
+  characterSpace = 3 * ditDuration;                  // Space between characters
+  wordSpace = (WPM_RESOLUTION / farnsworthWPM) * 7;  // Space between words
 }
 
 /// @brief returns true when keyer is ready for input (in IDLE state)
-bool Keyer::isReadyForInput() const
-{
-    return currentState == IDLE; // Only consider ready if truly idle, not just between symbols
+bool Keyer::isReadyForInput() const {
+  return currentState == IDLE;  // Only consider ready if truly idle, not just between symbols
 }
 
 /// @brief Call only when keyer is ready for input (IDLE state)
-bool Keyer::sendCharacterSpace()
-{
-    if (!isReadyForInput())
-    {
-        return false;
-    }
-    microTimer.resume();
-    toggleOutput(false); // Ensure the output is off
-    currentState = WAITING_CHARACTER_SPACE;
-    waitingEndTime = microTimer.read() + characterSpace;
-    return true;
+bool Keyer::sendCharacterSpace() {
+  if (!isReadyForInput()) {
+    return false;
+  }
+  beginTransmission();
+  toggleOutput(false);  // Ensure the output is off
+  currentState = WAITING_CHARACTER_SPACE;
+  waitingEndTime = microTimer.read() + characterSpace;
+  return true;
 }
 
 /// @brief Call only when keyer is ready for input (IDLE state)
-bool Keyer::sendWordSpace()
-{
-    if (!isReadyForInput())
-    {
-        return false;
-    }
-    microTimer.resume();
-    toggleOutput(false); // Ensure the output is off
-    currentState = WAITING_WORD_SPACE;
-    waitingEndTime = microTimer.read() + wordSpace;
-    return true;
+bool Keyer::sendWordSpace() {
+  if (!isReadyForInput()) {
+    return false;
+  }
+  beginTransmission();
+  toggleOutput(false);  // Ensure the output is off
+  currentState = WAITING_WORD_SPACE;
+  waitingEndTime = microTimer.read() + wordSpace;
+  return true;
 }
 
 /// @brief starts sending a dit. Call only when keyer is ready for input (IDLE state)
-bool Keyer::triggerDit()
-{
-    if (!isReadyForInput())
-    {
-        return false;
-    }
-    sendDit();
-    currentState = TRANSMITTING_DIT; // Update state appropriately
-    return true;
+bool Keyer::triggerDit() {
+  if (!isReadyForInput()) {
+    return false;
+  }
+  sendDit();
+  currentState = TRANSMITTING_DIT;  // Update state appropriately
+  return true;
 }
 
 /// @brief starts sending a dah. Call only when keyer is ready for input (IDLE state)
-bool Keyer::triggerDah()
-{
-    if (!isReadyForInput())
-    {
-        return false;
-    }
-    sendDah();
-    currentState = TRANSMITTING_DAH;
-    return true;
+bool Keyer::triggerDah() {
+  if (!isReadyForInput()) {
+    return false;
+  }
+  sendDah();
+  currentState = TRANSMITTING_DAH;
+  return true;
 }
 
-void Keyer::setWPM(int newWpm)
-{
-    if (wpm != newWpm)
-    {
-        wpm = newWpm;
-        farnsworthWPM = wpm - 5; // Example adjustment for Farnsworth timing, needs more research
-        updateTiming();
-        Serial.print(F("WPM="));
-        Serial.print(wpm);
-        Serial.print(F(" Farnsworth="));
-        Serial.println(farnsworthWPM);
-    }
+void Keyer::setWPM(int newWpm) {
+  if (wpm != newWpm) {
+    wpm = newWpm;
+    farnsworthWPM = wpm - 5;  // Example adjustment for Farnsworth timing, needs more research
+    updateTiming();
+    Serial.print(F("WPM="));
+    Serial.print(wpm);
+    Serial.print(F(" Farnsworth="));
+    Serial.println(farnsworthWPM);
+  }
 }
 
-int Keyer::getWPM() const
-{
-    return wpm;
+int Keyer::getWPM() const {
+  return wpm;
 }

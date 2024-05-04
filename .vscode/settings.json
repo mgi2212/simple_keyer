@@ -3,5 +3,6 @@
         "algorithm": "cpp",
         "associative_base": "cpp",
         "string": "cpp"
-    }
+    },
+    "C_Cpp.errorSquiggles": "enabled"
 }

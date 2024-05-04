@@ -35,10 +35,10 @@
 #define Keyer_h
 
 #include <Arduino.h>
+#include <limits.h>
 #include <Bounce2.h>
 #include <Timer.h>
-#include <MD_AD9833.h>
-#include <SPI.h>
+#include <AD9833.h>
 
 #define SIDETONE_FREQUENCY 1000
 
@@ -55,10 +55,21 @@ enum KeyerState
     WAITING_WORD_SPACE
 };
 
+struct KeyerConfig
+{
+  int ditPin;
+  int dahPin;
+  int outputPin;
+  int pttPin;
+  int ledPin;
+  int pttHangTime;
+  int wpmSpeedPin;
+};
+
 class Keyer
 {
 public:
-    Keyer(int ditPin, int dahPin, int outputPin, MD_AD9833 &toneGen);
+    Keyer(KeyerConfig &config, AD9833 &toneGen);
     void setup();
     void update();
     bool sendCharacterSpace();
@@ -70,19 +81,24 @@ public:
     bool isReadyForInput() const;
 
 private:
-    int ditPin, dahPin, outputPin;
-    MD_AD9833 &toneGen;
+    KeyerConfig &config;
+    AD9833 &toneGen;
     Bounce2::Button debouncerDit;
     Bounce2::Button debouncerDah;
     Timer microTimer;
 
+    unsigned long currentTime;
+    unsigned long transmissionStartTime;
     unsigned long transmissionEndTime;
+    unsigned long lastKeyEndTime;
     unsigned long waitingEndTime;
     unsigned long ditDuration;
     unsigned long dahDuration;
     unsigned long elementSpace;
     unsigned long characterSpace;
     unsigned long wordSpace;
+    bool pttTimerStarted;
+    char strBuffer[256]; // Buffer to hold formatted strings
 
     int wpm;           // Words per minute for Morse code transmission
     int farnsworthWPM; // Adjusted WPM for Farnsworth timing
@@ -95,6 +111,8 @@ private:
     void toggleOutput(bool state);
     void updateTiming();
     void handleIambicKeying();
+    void beginTransmission();
+    void checkEndTransmission();
 };
 
 #endif

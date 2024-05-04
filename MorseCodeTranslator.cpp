@@ -142,7 +142,7 @@ void MorseCodeTranslator::update()
             textToTranslate = "";
             currentCharIndex = 0;
             isSending = false;
-            Serial.println(F("Sending complete."));
+            Serial.println(F("Send complete."));
         }
         break;
     case TS_SENDING_CHARACTER:
